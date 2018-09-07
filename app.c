@@ -1,26 +1,12 @@
-#include <native/task.h>
-#include <rtdk.h>
-#include <native/timer.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <signal.h>
+#include <sys/types.h>
+#include <fcntl.h>
 #include <unistd.h>
-#include <sys/mman.h>
-#include <rtdm/rtdm.h>
+#include <stdint.h>
 
 #define OUTPUT 1
 #define INPUT 0
-#define EDGE 3
-#define IRQ_GPIO 12
-#define OUT_GPIO 15
-#define PERIOD 1000000 //1ms
-RT_TASK gpio_irq_task;
-int quitFlag=0;
-
-int fd;
-void signal_handler(int sig){
-    quitFlag = 1;
-}
 
 typedef struct{
     uint8_t gpio_num;
@@ -28,36 +14,47 @@ typedef struct{
 } gpio_set;
 
 
-void gpio_irq(void *arg)
-{
-    RTIME now, previous;
-    int out = OUT_GPIO;
-    int irq = IRQ_GPIO;
+int main(int argc, char** argv){
+	if(argc != 4){
+		printf("usage : ./a pinnum value mode(1: output, 0: input)\n");
+		exit(1);
+	}
+	printf("start\n");
+	int fp;
+	char num, mode, value;
+	num   = atoi(argv[1]);
+	value = atoi(argv[2]);
+	mode  = atoi(argv[3]);
+	gpio_set cmd;
 
-    if(rt_dev_ioctl(fd, OUTPUT, &out) < 0){
-        rt_printf("not support num %d\n",out);
-    }
-    if(rt_dev_ioctl(fd, EDGE, &irq) < 0){
-        rt_printf("not support num %d\n",irq);
-    }
-    while (1){
-        rt_task_wait_period(NULL);
-    }
-}
-int main(){
-    signal(SIGTERM, signal_handler);
-    signal(SIGINT, signal_handler);
-    mlockall(MCL_CURRENT|MCL_FUTURE);
-    rt_print_auto_init(1);
+	cmd.gpio_num = num;
+	cmd.value    = value;
 
-    if((fd = rt_dev_open("gpio_rtdm", 0)) < 0) {
-        perror("rt_open");
-        exit(-1);
-    }
-    rt_task_create(&gpio_irq_task, "rtdm_irq", 0, 99, 0);
-    rt_task_set_periodic(&gpio_irq_task, TM_NOW, rt_timer_ns2ticks(PERIOD));
-    rt_task_start(&gpio_irq_task, &gpio_irq, NULL);
-    pause();
-    rt_task_delete(&gpio_irq_task);
-    return 0;
+
+	if((fp = open("/dev/gpio",O_RDWR)) < 0){
+		perror("open");
+		exit(1);
+	}
+
+	if(ioctl(fp, mode, &num) < 0){
+		printf("not support num(ioctl)\n");
+		exit(1);
+	}
+
+	if(mode == OUTPUT){
+		if(write(fp, &cmd, sizeof(cmd)) < 0){
+			printf("not support num2\n");
+			exit(1);
+		}
+		printf("GPIO : %d, mode : OUTPUT,  Write Data : %d\n",cmd.gpio_num, cmd.value);
+	}
+	else{
+		if(read(fp, &cmd, sizeof(cmd)) < 0){
+			printf("not support num2\n");
+			exit(1);
+		}
+		printf("GPIO : %d, mode : INPUT, Read Data : %d\n",cmd.gpio_num, cmd.value);
+	}
+
+	return 0;
 }
