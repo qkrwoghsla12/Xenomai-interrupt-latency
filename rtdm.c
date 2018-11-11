@@ -23,36 +23,6 @@ static int irq_handle(rtdm_irq_t *irq_handle){
 	return RTDM_IRQ_HANDLED;
 }
 
-/*
-static struct rtdm_device device = {
- struct_version:         RTDM_DEVICE_STRUCT_VER,
- device_flags:           RTDM_NAMED_DEVICE,
- device_name:            DEVICE_NAME,
- open_rt:                NULL,
- open_nrt:               NULL,
-
- ops:{
-    close_rt:       NULL,				
-    close_nrt:      NULL,		// open, close 는 nrt task 인 main 에서 이루어 지므로 nrt 에 지정
-  
-    ioctl_rt:       NULL,
-    ioctl_nrt:      NULL,
-  
-    read_rt:        NULL,
-    read_nrt:       NULL,
-
-    write_rt:       NULL,
-    write_nrt:      NULL,   
-    },
-
- device_class:           RTDM_CLASS_EXPERIMENTAL,
- device_sub_class:       RTDM_SUBCLASS_GPIO_IRQ,
- driver_name:            "gpio_irq_rtdm",
- driver_version:         RTDM_DRIVER_VER(0, 0, 0),
- peripheral_name:        "GPIO_IRQ RTDM",
- provider_name:          "aa",
-};
-*/
 
 static int __init gpio_rtdm_init(void){
 	ret = gpio_direction_input(GPIO_IRQ);
