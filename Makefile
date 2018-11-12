@@ -3,7 +3,7 @@ KDIR := /lib/modules/$(shell uname -r)/build/
 
 all:
 	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
-	gcc -o app app.c
+#	gcc -o app app.c
 clean:
 	rm -rf *.ko
 	rm -rf *.mod.*
